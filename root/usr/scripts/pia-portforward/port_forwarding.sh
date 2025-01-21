@@ -186,10 +186,13 @@ CONF_FILE=/config/qBittorrent/qBittorrent.conf
 CERT=$(sed -nE 's/.*WebUI\\HTTPS\\CertificatePath=(.*)/\1/p' $CONF_FILE)
 PRIVKEY=$(sed -nE 's/.*WebUI\\HTTPS\\KeyPath=(.*)/\1/p' $CONF_FILE)
 SSL_EN=$(sed -nE 's/.*WebUI\\HTTPS\\Enabled=(true|false).*/\1/p' $CONF_FILE)
+HTTP=$([ "$SSL_EN" = "true" ] && echo "https" || echo "http") 
 TORRENTING_PORT=$(sed -nE 's/.*Session\\Port=([0-9]+).*/\1/p' $CONF_FILE)
 WEBUI_LISTEN_PORT=$(sed -nE 's/.*WebUI\\Port=([0-9]+).*/\1/p' $CONF_FILE)
 SERVE_PORT=8443
 TEMPDIR=$(mktemp -d -t port_forward_www.XXXXXXXXXX)
+
+echo "Serving forwarded port value at $HTTP://0.0.0.0:8443/port.txt"
 
 # Trap to cleanup the web server if we exit for any reason, since it may otherwise run forever and lock up the listening port
 trap 'rm -rf $TEMPDIR && kill $(jobs -p) 2>/dev/null' EXIT                                                                    
@@ -227,7 +230,6 @@ while true; do
     echo $port > $TEMPDIR/port.txt
     
     # Send API command to change port.  Note that this requires the setting for no authorization from localhost, otherwise must have password to auth and not done here
-    HTTP=$([ "$SSL_EN" = "true" ] && echo "https" || echo "http") 
     HTTP_RESP=$(curl -k -s "$HTTP://localhost:$WEBUI_LISTEN_PORT/api/v2/app/setPreferences" -d 'json={"listen_port": "'"$port"'"}' -o /dev/null -w "%{http_code}")
     if [ "$HTTP_RESP" != "200" ]; then
 	echo "qbittorrent API returned status \"$HTTP_RESP\" when updating listen port - check that \"Bypass authentication for clients on localhost\" is checked or update this code"
