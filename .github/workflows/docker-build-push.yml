@@ -17,7 +17,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: docker.io/jkhax0r/qbittorrent_pia_portforward:tagname
+          tags: docker.io/jkhax0r/qbittorrent_pia_portforward:latest
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
