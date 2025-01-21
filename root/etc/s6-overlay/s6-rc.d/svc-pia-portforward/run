@@ -1,0 +1,17 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+# Initial sleep to let other things startup... I don't really want to figure out dependencies or whatever this service system uses
+sleep 15
+
+CMD="cd /usr/scripts/pia-portforward && PIA_USER=${PIA_USER} PIA_PASS=${PIA_PASS} PIA_TOKEN=${PIA_TOKEN} PF_GATEWAY=${PF_GATEWAY} PF_HOSTNAME=${PF_HOSTNAME} ./port_forwarding.sh"
+CHECKER_CMD="true"
+
+if [[ -z ${LSIO_NON_ROOT_USER} ]]; then
+exec \
+    s6-notifyoncheck -d -n 300 -w 1000 -c "$CHECKER_CMD" \
+        s6-setuidgid abc /bin/bash -c "$CMD"
+else
+    s6-notifyoncheck -d -n 300 -w 1000 -c "$CHECKER_CMD" \
+        /bin/bash -c "$CMD"
+fi
